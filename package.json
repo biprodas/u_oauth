@@ -1,0 +1,48 @@
+{
+  "name": "metro_rail",
+  "version": "1.0.0",
+  "description": "Backend APIs development with Node.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "NODE_ENV=production node server.js",
+    "dev": "NODE_ENV=development nodemon server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://biprodas@bitbucket.org/semicolondevs/ceip_01.git"
+  },
+  "keywords": [
+    "Node.js",
+    "Express",
+    "MongoDB",
+    "Mongoose"
+  ],
+  "author": "Biprodas Roy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://bitbucket.org/semicolondevs/ceip_01/issues"
+  },
+  "homepage": "https://bitbucket.org/semicolondevs/ceip_01#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "colors": "^1.4.0",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-rate-limit": "^5.1.1",
+    "helmet": "^3.22.0",
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^8.5.1",
+    "moment": "^2.24.0",
+    "morgan": "^1.10.0",
+    "nanoid": "^3.1.10",
+    "pg": "^8.4.1",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^5.21.7",
+    "xss-clean": "^0.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.3"
+  }
+}
