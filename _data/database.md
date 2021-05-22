@@ -6,12 +6,13 @@ CREATE TABLE users(
     name                    VARCHAR(255),  
     username                VARCHAR(255), 
     password                VARCHAR(255),  
-    phone                   VARCHAR(255),  
+    -- email                   VARCHAR(255),  
+    -- phone                   VARCHAR(255),  
     role                    VARCHAR(255),  
     status                  VARCHAR(255),
 
-    createdAt              TIMESTAMP WITH TIME ZONE,
-    updatedAt              TIMESTAMP WITH TIME ZONE,
+    "createdAt"              TIMESTAMP WITH TIME ZONE,
+    "updatedAt"              TIMESTAMP WITH TIME ZONE,
   
   CONSTRAINT users_pkey PRIMARY KEY (id));
 ```
@@ -25,8 +26,8 @@ CREATE TABLE todos(
     description     TEXT,
     status          VARCHAR(255),
 
-    createdAt      TIMESTAMP WITH TIME ZONE,
-    updatedAt      TIMESTAMP WITH TIME ZONE,
+    "createdAt"      TIMESTAMP WITH TIME ZONE,
+    "updatedAt"      TIMESTAMP WITH TIME ZONE,
 
   CONSTRAINT projects_pkey PRIMARY KEY (id));
 ```

@@ -14,6 +14,14 @@ const User = sequelize.define('user', {
       notEmpty: { msg: "Name can not be empty" },
     }
   },
+  username: {
+    type: Sequelize.STRING,
+    allowNull: false,
+    validate: {
+      notNull: { msg: "Username can not be null" },
+      notEmpty: { msg: "Username can not be empty" },
+    }
+  },
   password: {
     type: Sequelize.STRING,
     allowNull: false,
@@ -26,18 +34,18 @@ const User = sequelize.define('user', {
       }
     }
   },
-  phone: {
-    type: Sequelize.STRING,
-    allowNull: false,
-    validate: {
-      notNull: { msg: "Phone can not be null" },
-      notEmpty: { msg: "Phone can not be empty" },
-      is: {
-        args: /^(?:\+88|01)?(?:\d{11}|\d{13})$/i,
-        msg: "Not a vaild phone number"
-      }
-    }
-  },
+  // phone: {
+  //   type: Sequelize.STRING,
+  //   allowNull: false,
+  //   validate: {
+  //     notNull: { msg: "Phone can not be null" },
+  //     notEmpty: { msg: "Phone can not be empty" },
+  //     is: {
+  //       args: /^(?:\+88|01)?(?:\d{11}|\d{13})$/i,
+  //       msg: "Not a vaild phone number"
+  //     }
+  //   }
+  // },
   role: {
     type: Sequelize.ENUM,
     values: ['Admin', 'Operator', 'User'], // Suprer admin can only be set manually
