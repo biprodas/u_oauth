@@ -11,18 +11,18 @@ const {
 } = require('../controllers/users');
 
 
-// router.use(protect);
+router.use(protect);
 // router.use(authorize(['admin']));
 
 router
   .route('/')
   .get(getUsers)
-  .post(createUser);
+  .post(authorize(['Admin']), createUser);
 
 router
   .route('/:id')
   .get(getUser)
   .put(updateUser)
-  .delete(deleteUser);
+  .delete(authorize(['Admin']), deleteUser);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const JWT = require('jsonwebtoken');
 const { Sequelize, sequelize } = require('../config/db');
 
 const User = sequelize.define('user', {
@@ -34,24 +34,13 @@ const User = sequelize.define('user', {
       }
     }
   },
-  // phone: {
-  //   type: Sequelize.STRING,
-  //   allowNull: false,
-  //   validate: {
-  //     notNull: { msg: "Phone can not be null" },
-  //     notEmpty: { msg: "Phone can not be empty" },
-  //     is: {
-  //       args: /^(?:\+88|01)?(?:\d{11}|\d{13})$/i,
-  //       msg: "Not a vaild phone number"
-  //     }
-  //   }
-  // },
   role: {
     type: Sequelize.ENUM,
     values: ['Admin', 'Operator', 'User'], // Suprer admin can only be set manually
     defaultValue: 'User'
   },
-  
+  // refresh_token: Sequelize.STRING,
+
   status: {
     type: Sequelize.ENUM,
     values: ['Pending', 'Active', 'Inactive'],
@@ -79,16 +68,44 @@ User.beforeSave(async user => {
 
 // Sign JWT and return
 User.prototype.getSignedJwtToken = function () {
-  return jwt.sign({
+  return JWT.sign({
     id: this.id,
     name: this.name,
     username: this.username,
     role: this.role,
-    project_id: this.project_id
   }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '30d'
   });
 };
+
+User.prototype.getSignedAccessToken = function () {
+  const payload = { id: this.id, username: this.username };
+  const secret = process.env.ACCESS_TOKEN_SECRET;
+  const options = {
+    expiresIn: process.env.ACCESS_TOKEN_EXPIRES || '5m',
+    // issuer: 'biprodas.me',
+    // audience: this.id,
+  }
+  return JWT.sign(payload, secret, options);
+};
+
+// dorkar nai
+// User.prototype.getSignedRefreshToken = function () {
+//   const payload = { id: this.id, username: this.username };
+//   const secret = process.env.REFRESH_TOKEN_SECRET;
+//   const options = {
+//     expiresIn: process.env.REFRESH_TOKEN_EXPIRES || '7d',
+//     // issuer: 'biprodas.me',
+//     // audience: this.id,
+//   }
+//   return JWT.sign(payload, secret, options);
+// };
+
+// User.prototype.verifyRefreshToken = function (refresh_token) {
+//   const decoded = jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
+//   // check from cokiee or redis
+// };
+
 
 // Match user entered password to hashed password in database
 User.prototype.matchPassword = async function (enteredPassword) {
