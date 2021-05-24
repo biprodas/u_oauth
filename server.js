@@ -29,10 +29,13 @@ app.use(helmet()); // Set security headers
 app.use(xss()); // Prevent XSS attacks
 //app.use(limiter);                   // Rate limiting
 app.use(hpp()); // Prevent http param pollution
-app.use(cors()); // Enable CORS
-// app.use(cors({
-//   exposedHeaders: ['authorization']
-// }));
+// app.use(cors()); // Enable CORS
+app.use(cors({
+  // exposedHeaders: ['authorization'],
+  credentials: true, 
+  origin: true
+  // origin: 'http://localhost:3000'
+}));
 
 // File Upload Middleware
 // app.use("uploads", express.static("uploads"));

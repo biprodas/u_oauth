@@ -2,9 +2,11 @@ const crypto = require('crypto');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const { v4: uuidv4 } = require('uuid');
+const os = require( 'os' );
 
 
 const { User, RefreshToken } = require('../models');
+const moment = require('moment');
 
 // @desc      Register user
 // @route     POST /api/v1/auth/register
@@ -18,18 +20,19 @@ exports.register = asyncHandler(async (req, res, next) => {
   }
   // Create user
   user = await User.create({ name, username, phone, password, role });
-  // Send Token 
-  // sendTokenResponse(user, 200, res);
+
   const accessToken = user.getSignedAccessToken();
   // const refreshToken = user.getSignedRefreshToken(user, req);
-  let rtoken = {
-    userId: user.dataValues.id,
+  const [time,type] = (process.env.REFRESH_TOKEN_EXPIRES||"").split("*");
+  
+  rtoken = await RefreshToken.create({
+    userId: user.id,
     token: uuidv4(),
-    expiresIn: new Date(Date.now() + (process.env.JWT_COOKIE_EXPIRE||7) * 24 * 60 * 60 * 1000), // cookie date ta dilam
+    expiresIn: moment().add(Number(time||0), type),
+    // expiresIn: new Date(Date.now() + (process.env.REFRESH_TOKEN_EXPIRES||7) * 24 * 60 * 60 * 1000), // cookie date ta dilam
     createdByIp: req.ip
-  }
-  console.log("Mewwww",rtoken)
-  rtoken = await RefreshToken.create(rtoken)
+  })
+  // console.log("Mewwww",rtoken)
 
   const cookieOptions = {
     expires: new Date(Date.now() + (process.env.JWT_COOKIE_EXPIRE||7) * 24 * 60 * 60 * 1000),
@@ -41,13 +44,12 @@ exports.register = asyncHandler(async (req, res, next) => {
 
   res
     .status(201)
-    .cookie('refreshToken', rtoken.token, cookieOptions)
+    .cookie('accessToken', accessToken, cookieOptions)
     .json({
       success: true,
-      message: ``,
+      message: `User registered successfully.`,
       accessToken, refreshToken: rtoken.token
     });
-
 });
 
 // @desc      Login user
@@ -72,18 +74,40 @@ exports.login = asyncHandler(async (req, res, next) => {
   }
 
   const accessToken = user.getSignedAccessToken();
-  // const refreshToken = user.getSignedRefreshToken(user, req);
-  const rtoken = await RefreshToken.create({
+
+  // const refreshToken = await RefreshToken.findOne({
+  //   where: { token: req.cookies.refreshToken },
+  //   include: [User],
+  // });
+
+  // const networkInterfaces = os.networkInterfaces();
+  // console.log("NetworkInterface", networkInterfaces );
+
+  const [time,type] = (process.env.REFRESH_TOKEN_EXPIRES||"").split("*");
+  // console.log("Time/Type",time,type);
+
+  const rtoken = new RefreshToken({
     userId: user.id,
-    // token: uuidv4(), 
-    token: crypto.randomBytes(40).toString('hex'),
-    expiresIn: new Date(Date.now() + (process.env.JWT_COOKIE_EXPIRE||7) * 24 * 60 * 60 * 1000), // cookie date ta dilam
+    token: uuidv4(), 
+    // token: crypto.randomBytes(40).toString('hex'),
+    expiresIn: moment().add(Number(time||0), type),
     createdByIp: req.ip
   })
 
+  // console.log("Mewwww",rtoken)
+  // logout from all device
+  const [ rowsUpdated, [ exRefreshTokens ] ] = await RefreshToken.update(
+    { replacedByToken: rtoken.token, revokedByIp: req.ip, revokedAt: moment() }, 
+    {
+      where: { userId: user.id, revokedAt: null },
+      returning: true
+    }
+  );
+  await rtoken.save();
+
   const cookieOptions = {
     expires: new Date(Date.now() + (process.env.JWT_COOKIE_EXPIRE||7) * 24 * 60 * 60 * 1000),
-    httpOnly: true
+    httpOnly: false
   };
   if (process.env.NODE_ENV === 'production') {
     cookieOptions.secure = true;
@@ -91,15 +115,12 @@ exports.login = asyncHandler(async (req, res, next) => {
 
   res
     .status(200)
-    .cookie('refreshToken', rtoken.token, cookieOptions)
+    .cookie('accessToken', accessToken, cookieOptions)
     .json({
       success: true,
-      message: ``,
+      message: `User logged in successfully.`,
       accessToken, refreshToken: rtoken.token
     });
-
-
-  // sendTokenResponse(user, 200, res);
 });
 
 
@@ -107,9 +128,22 @@ exports.login = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/auth/logout
 // @access    Private
 exports.logout = asyncHandler(async (req, res, next) => {
-  await RefreshToken.destroy({where: {token: req.cookies.refreshToken}});
-  res.clearCookie("token");
-  res.clearCookie("refreshToken");
+  if(!req.user){
+    return next(new ErrorResponse('Unauthorized', 403));
+  }
+  const {refreshToken} = req.user;
+
+  if(!refreshToken){
+    return next(new ErrorResponse('no active refresh token', 403));
+  }
+  refreshToken.revokedAt = Date.now();
+  refreshToken.revokedByIp = req.ip;
+  refreshToken.replacedByToken = refreshToken.token;
+  await refreshToken.save();
+
+  // res.clearCookie("accessToken");
+  // console.log("QQQQQQQ",req.cookies); 
+  Object.entries(req.cookies).map(([key,value]) => res.clearCookie(key));
   // res.cookie('token', 'none', {
   //   expires: new Date(Date.now() + 10 * 1000),
   //   httpOnly: true
@@ -117,6 +151,38 @@ exports.logout = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message: `Logout successfull`,
+    data: {}
+  });
+});
+
+
+// @desc      Log user out / clear cookie
+// @route     DELETE /api/v1/auth/logout-all
+// @access    Private
+exports.logoutAll = asyncHandler(async (req, res, next) => {
+  if(!req.user){
+    return next(new ErrorResponse('Unauthorized', 403));
+  }
+  const {refreshToken} = req.user;
+
+  if(!refreshToken){
+    return next(new ErrorResponse('no active refresh token', 403));
+  }
+  
+  const [ rowsUpdated, [ exRefreshTokens ] ] = await RefreshToken.update(
+    { replacedByToken: refreshToken.token, revokedByIp: req.ip, revokedAt: moment() }, 
+    {
+      where: { userId: req.user.id, revokedAt: null },
+      returning: true
+    }
+  );
+
+  Object.entries(req.cookies).map(([key,value]) => res.clearCookie(key));
+
+  res.status(200).json({
+    success: true,
+    message: `Logout successfull`,
     data: {}
   });
 });
@@ -127,23 +193,23 @@ exports.logout = asyncHandler(async (req, res, next) => {
 // @access    Public
 exports.refreshToken = asyncHandler(async (req, res, next) => {
 
-  const refreshToken = await RefreshToken.findOne({
-    where: { token: req.cookies.refreshToken },
-    include: [User],
-  });
-  // console.log(refreshToken)
-  if (!refreshToken || !refreshToken.isActive){
-    return next(new ErrorResponse('Invalid Token', 401));
+  if(!req.user){
+    return next(new ErrorResponse('Unauthorized', 403));
   }
+  const {refreshToken} = req.user;
 
-  const { user } = refreshToken;
-
+  if(!refreshToken){
+    return next(new ErrorResponse('no active refresh token', 403));
+  }
+  
   const accessToken = user.getSignedAccessToken();
   // replace old refresh token with a new one and save
+  const [time,type] = (process.env.REFRESH_TOKEN_EXPIRES||"").split("*");
+
   const newRefreshToken = new RefreshToken({
     userId: user.id,
     token: uuidv4(),
-    expiresIn: new Date(Date.now() + (process.env.JWT_COOKIE_EXPIRE||7) * 24 * 60 * 60 * 1000), // cookie date ta dilam
+    expiresIn: moment().add(Number(time||0), type),
     createdByIp: req.ip
   });
 
@@ -164,7 +230,7 @@ exports.refreshToken = asyncHandler(async (req, res, next) => {
 
   res
     .status(200)
-    .cookie('refreshToken', newRefreshToken.token, cookieOptions)
+    .cookie('accessToken', accessToken, cookieOptions)
     .json({
       success: true,
       message: ``,
@@ -182,25 +248,23 @@ exports.revokeToken = asyncHandler(async (req, res, next) => {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
-  const token = req.body.token || req.cookies.refreshToken;
-  const ipAddress = req.ip;
+  const token = req.body.refreshToken;
 
   if (!token) {
-    return next(new ErrorResponse('Invalid is required', 401));
+    return next(new ErrorResponse('token is required', 401));
   }
 
-  const ownToken = await RefreshToken.findOne({ where:{ userId: req.user.id, token } });
-  // users can revoke their own tokens and admins can revoke any tokens
-  if (!ownToken && req.user.role !== "Admin") {
-      return next(new ErrorResponse('Unauthorized', 401));
-  }
-
-  // replace old refresh token with a new one and save
+  // const ownToken = await RefreshToken.findOne({ where:{ userId: req.user.id, token } });
   const refreshToken = await RefreshToken.findOne({ where: {token} });
   if (!refreshToken || !refreshToken.isActive){
     return next(new ErrorResponse('Invalid Token', 401));
   }
+  // users can revoke their own tokens and admins can revoke any tokens
+  if (refreshToken.userId!==req.user.id && req.user.role !== "Admin") {
+      return next(new ErrorResponse('Unauthorized', 401));
+  }
 
+  // refreshToken.replacedByToken = 
   refreshToken.revokedAt = Date.now();
   refreshToken.revokedByIp = req.ip;
   await refreshToken.save();
@@ -283,7 +347,7 @@ const sendTokenResponse = (user, statusCode, req, res) => {
 
   res
     .status(statusCode)
-    .cookie('refreshToken', refreshToken, cookieOptions)
+    .cookie('accessToken', accessToken, cookieOptions)
     .json({
       success: true,
       message: ``,
@@ -296,5 +360,5 @@ const sendTokenResponse = (user, statusCode, req, res) => {
 //     httpOnly: true,
 //     expires: new Date(Date.now() + (process.env.JWT_COOKIE_EXPIRE||7) * 24 * 60 * 60 * 1000),
 //   };
-//   res.cookie('refreshToken', token, cookieOptions);
+//   res.cookie('accessToken', token, cookieOptions);
 // }

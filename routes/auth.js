@@ -7,6 +7,7 @@ const {
   register,
   login,
   logout,
+  logoutAll,
   getMe,
   refreshToken,
   revokeToken,
@@ -19,9 +20,10 @@ router.use(jwtConfig);
 
 router.post('/register', register);
 router.post('/login', login);
-router.post('/refresh-token', refreshToken);
+router.post('/refresh-token', protect, refreshToken);
 router.post('/revoke-token', protect, revokeToken);
-router.delete('/logout', logout);
+router.delete('/logout', protect, logout);
+router.delete('/logoutall', protect, logoutAll);
 router.get('/me', protect, getMe);
 // router.put('/updatedetails', protect, updateDetails);
 // router.put('/updatepassword', protect, updatePassword);

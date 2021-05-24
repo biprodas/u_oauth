@@ -1,13 +1,17 @@
+import http from '../services/http';
+import Cookies from 'universal-cookie';
+
+
 export const httpClient = () => {
   const token  = localStorage.getItem('token');
   return { Authorization: `Bearer ${token}` };
 };
 
+
 export const authProvider = {
   // authentication
-  login: ({ username, password }) => {
-    console.log('REACT_APP_API_URL', process.env.REACT_APP_API_URL);
-    localStorage.setItem('token', "data.accessToken");
+  login: async ({ username, password }) => {
+    await http.post(`/auth/login`, {username, password});
     return Promise.resolve({ redirectTo: '/users' });
   },
   checkError: (error) => {
@@ -20,15 +24,17 @@ export const authProvider = {
     return Promise.resolve();
   },
   checkAuth: () => {
-    return localStorage.getItem('token')
+    const cookies = new Cookies();
+    return cookies.get('accessToken')
       ? Promise.resolve()
       : Promise.reject({ message: 'login required' })
   },
-  logout: () => {
-    localStorage.removeItem('token');
+  logout: async () => {
+    await http.delete(`/auth/logout`);
     return Promise.resolve();
   },
   getIdentity: () => {
+    console.log("Get identity");
     try {
       // const { id, fullName, avatar } = JSON.parse(localStorage.getItem('token'));
 
