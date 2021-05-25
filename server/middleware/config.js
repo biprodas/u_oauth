@@ -1,12 +1,12 @@
 const ErrorResponse = require('../utils/errorResponse');
 
 exports.jwtConfig = (req, res, next) => {
-  const jwtPrivateKey = process.env.JWT_SECRET;
+  const jwtPrivateKey = process.env.ACCESS_TOKEN_SECRET;
   //const jwtExpire = process.env.JWT_EXPIRE;
 
   if(!jwtPrivateKey){
     return next(
-      new ErrorResponse('FATAL ERROR: JWT_PRIVATE_KEY is not defined.', 500)
+      new ErrorResponse('FATAL ERROR: ACCESS_TOKEN_SECRET is not defined.', 500)
     );
   }
   // if(!jwtExpire){

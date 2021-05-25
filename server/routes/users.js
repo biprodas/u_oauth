@@ -11,7 +11,7 @@ const {
 } = require('../controllers/users');
 
 
-// router.use(protect);
+router.use(protect);
 // router.use(authorize(['admin']));
 
 router

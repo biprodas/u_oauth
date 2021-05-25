@@ -8,18 +8,8 @@ const {nanoid} = require('nanoid');
 // @route     GET /api/v1/users
 // @access    Private/Admin
 exports.getUsers = asyncHandler(async (req, res, next) => {
-  const pid = req.query.project_id||null;
   const users = await User.findAll();
-  // const users = await sequelize.query(`
-  //   select name, username, phone, role, status 
-  //   from users where project_id=${pid} or role='Admin';`,
-  // { type: sequelize.QueryTypes.SELECT });
-
-  // return res.status(200).json({
-  //   success: true,
-  //   count: users.length,
-  //   data: users
-  // });
+  
   return res
   .status(200)
   .set("Content-Range", users.length)

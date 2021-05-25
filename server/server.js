@@ -1,6 +1,9 @@
+const {sequelize} = require("./config/db")
 const app = require("./app");
 // require("colors");
 
+
+(async()=>await sequelize.sync())();
 
 // Listening on port
 const PORT = process.env.PORT || 5000;

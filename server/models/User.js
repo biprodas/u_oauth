@@ -82,7 +82,7 @@ User.prototype.getSignedAccessToken = function () {
   const payload = { id: this.id, username: this.username };
   const secret = process.env.ACCESS_TOKEN_SECRET;
   const options = {
-    expiresIn: process.env.ACCESS_TOKEN_EXPIRES || '5m',
+    expiresIn: (process.env.ACCESS_TOKEN_EXPIRES||'5*m').replace("*", ""),
     // issuer: 'biprodas.me',
     // audience: this.id,
   }
