@@ -12,7 +12,7 @@ require("colors");
 
 // Load env vars
 dotenv.config({ path: "./config/config.env" });
-// dotenv.config();
+dotenv.config();
 
 const errorHandler = require("./middleware/error");
 const { connectPostgreSQL } = require("./config/db");
@@ -31,7 +31,8 @@ app.use(xss()); // Prevent XSS attacks
 app.use(hpp()); // Prevent http param pollution
 // app.use(cors()); // Enable CORS
 app.use(cors({
-  // exposedHeaders: ['authorization'],
+  exposedHeaders: ['Content-Range'],
+  // "Access-Control-Expose-Headers": "Content-Range",
   credentials: true, 
   origin: true
   // origin: 'http://localhost:3000'

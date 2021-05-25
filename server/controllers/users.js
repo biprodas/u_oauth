@@ -15,11 +15,15 @@ exports.getUsers = asyncHandler(async (req, res, next) => {
   //   from users where project_id=${pid} or role='Admin';`,
   // { type: sequelize.QueryTypes.SELECT });
 
-    return res.status(200).json({
-      success: true,
-      count: users.length,
-      data: users
-    });
+  // return res.status(200).json({
+  //   success: true,
+  //   count: users.length,
+  //   data: users
+  // });
+  return res
+  .status(200)
+  .set("Content-Range", users.length)
+  .json(users);
 });
 
 // @desc      Get single user
