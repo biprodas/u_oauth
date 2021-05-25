@@ -1,0 +1,48 @@
+process.env.NODE_ENV = "test";
+const db = require("../db");
+
+const request = require("supertest");
+const app = require("../app");
+
+beforeAll(async () => {
+  // console.log("create table");
+  await db.query(`CREATE TABLE users(
+    id                      SERIAL NOT NULL,
+    name                    VARCHAR(255),  
+    username                VARCHAR(255), 
+    password                VARCHAR(255),
+    role                    VARCHAR(255),  
+    status                  VARCHAR(255),
+  CONSTRAINT users_pkey PRIMARY KEY (id));`);
+});
+
+beforeEach(async () => {
+  // seed with some data
+  await db.query(`INSERT INTO users (name, username, password, role, status) VALUES 
+    ('Biprodas Roy', 'biprodas', '$2a$10$p3xf0hzL5JSYVFBjeNuhOeGw7LJLxrx29zwOfigiSR.s.2SLmpJzm', 'Admin', 'Active'),
+    ('Asish Sarkar', 'asish', '$2a$10$7sSQeiD/roWTdV0315fIxe8vAkPxs5.IjuyC4PxIZoghW/5zOI6ze', 'User', 'Active'),
+    ('Ruhit Rafi', 'ruhit', '$2a$10$sotE2LaV6T4ihVQNL43dE.FxyDhhLZhLvF9j8G7FRUM6FdyTQeSmy', 'User', 'Active')
+  ;`);
+});
+
+afterEach(async () => {
+  await db.query("DELETE FROM users");
+});
+
+afterAll(async () => {
+  await db.query("DROP TABLE users");
+  db.end();
+});
+
+
+describe("GET /api/users", () => {
+  test("It should respond with an array of users", async () => {
+    const {data} = await request(app).get("/users");
+    expect(response.body.length).toBe(3);
+    // expect(response.body[0]).toHaveProperty("id");
+    // expect(response.body[0]).toHaveProperty("name");
+    // expect(response.body[0]).toHaveProperty("username");
+    // expect(response.body[0]).toHaveProperty("password");
+    expect(200).toBe(200);
+  });
+});

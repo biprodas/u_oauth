@@ -1,8 +1,4 @@
-process.env.NODE_ENV = "test";
-const db = require("../db");
-
 const request = require("supertest");
-
 const app = require("../app");
 
 describe("GET /api ", () => {
@@ -10,6 +6,4 @@ describe("GET /api ", () => {
     const response = await request(app).get("/api");
     expect(response.status).toBe(200);
   });
-
-
 });

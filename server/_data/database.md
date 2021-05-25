@@ -1,7 +1,6 @@
 ## users
 ```sql
 CREATE TABLE users(
-    
     id                      SERIAL NOT NULL,
     name                    VARCHAR(255),  
     username                VARCHAR(255), 

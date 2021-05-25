@@ -41,6 +41,8 @@ app.use(cors({
 // File Upload Middleware
 // app.use("uploads", express.static("uploads"));
 
+
+// console.log(`Apps running on ${process.env.NODE_ENV} mode`);
 // Dev logging middleware
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));

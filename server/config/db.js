@@ -1,11 +1,13 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USERNAME,
-  process.env.DB_PASSWORD,
+let dbname = process.env.DB_NAME || "uoauth_test";
+let dbusername = process.env.DB_USERNAME || "postgres";
+let dbpass = process.env.DB_PASSWORD || "101";
+let dbhost = process.env.DB_HOST || "localhost";
+
+const sequelize = new Sequelize(dbname, dbusername, dbpass,
   {
-    host: process.env.DB_HOST, 
+    host: dbhost, 
     //  port: env.DATABASE_PORT,
     dialect: 'postgres',
     dialectOptios:{

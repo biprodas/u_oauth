@@ -1,0 +1,19 @@
+{
+  "development": {
+    "database": "uoauth",
+    "dialect": "postgres"
+  },
+  "test": {
+    "database": "uoauth_test",
+    "dialect": "postgres"
+  },
+  "production": {
+    "use_env_variable": "DATABASE_URL",
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "rejectUnauthorized": false
+      }
+    }
+  }
+}
